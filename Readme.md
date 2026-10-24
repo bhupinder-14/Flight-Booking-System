@@ -10,10 +10,10 @@ Each core domain is developed as an independent service:
 
 | Service | Description |
 |--------|-------------|
-| ✈️ [Flight Service](https://github.com/ArpanDhama2001/Flight-Service) | Manages airports, cities, flights, and seat availability. |
-| 📥 [Booking Service](https://github.com/ArpanDhama2001/Flight-Booking-Service) | Handles user bookings, payment timeouts, and publishes events. |
-| 🚪 [API Gateway](https://github.com/ArpanDhama2001/Flight-API-Gateway) | Central entry point with authentication, rate limiting, and routing. |
-| 📧 [Notification Service](https://github.com/ArpanDhama2001/Flights-Notification-Service) | Sends email confirmations using RabbitMQ consumers. |
+| ✈️ [Flight Service](https://github.com/bhupinder-14/Flight-Service) | Manages airports, cities, flights, and seat availability. |
+| 📥 [Booking Service](https://github.com/bhupinder-14/Flight-Booking-Service) | Handles user bookings, payment timeouts, and publishes events. |
+| 🚪 [API Gateway](https://github.com/bhupinder-14/Flight-API-Gateway) | Central entry point with authentication, rate limiting, and routing. |
+| 📧 [Notification Service](https://github.com/bhupinder-14/Flight-Notification-Service) | Sends email confirmations using RabbitMQ consumers. |
 
 ---
 

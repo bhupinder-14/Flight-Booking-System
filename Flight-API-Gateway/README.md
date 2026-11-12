@@ -1,49 +1,36 @@
-# Basic Node Express Template
+# API Gateway
 
-This is a base node js project template, which anyone can use as it has been prepared, by keeping some of the most important code principles and project management recommendations. Feel free to change anything.
+The Gateway on port 3002 handles user signup/signin, JWT authentication, role checks, rate limiting, and authenticated proxy requests to Flight and Booking services. The monorepo setup, database creation, startup order, and end-to-end PowerShell example are in the [root README](../README.md).
 
+## Local setup
 
-`src` -> Inside the src folder all the actual source code regarding the project will reside, this well not include any kind of tests. (You might make separate tests folder)
+From the repository root, create `Flight-API-Gateway/.env` from `.env.example`, configure the local MySQL account and a private JWT secret, create `api_gateway_db`, then run:
 
-Lets take a look inside the `src` folder
+```powershell
+Set-Location .\Flight-API-Gateway
+npm ci
+npx sequelize-cli db:migrate --config src/config/config.js --migrations-path src/migrations --env development
+npx sequelize-cli db:seed:all --config src/config/config.js --seeders-path src/seeders --env development
+npm run dev
+```
 
- - `config` -> In this folder anything and everything regarding any configurations of the setup of a library or module will be done. For e.g.: setting up `dotenv` and `server-config.js`.
+The service loads its own `.env`. Do not run Sequelize initialization commands: this repository already contains its configuration, migrations, and seeders. Do not commit `.env` or JWT secrets.
 
- - `routes` -> In the routes folder, we register a route and the corresponding middleware and controllers to it.
+## Routes
 
- - `middlewares` -> they are just going to intercept the incoming reqquests where we can write our validators, authenticators, etc.
+| Method | Route | Access / purpose |
+| --- | --- | --- |
+| POST | `/api/v1/user/signup` | Public customer registration; JSON `{ "email": "...", "password": "..." }` |
+| POST | `/api/v1/user/signin` | Public login with the same JSON fields; response `data` contains the JWT |
+| GET | `/api/v1/info` | Protected Gateway info endpoint |
+| POST | `/api/v1/user/role` | Admin-only role assignment |
+| POST | `/api/v1/user/addAdminRole` | Admin-only role assignment |
+| POST | `/api/v1/user/addFlightCompanyRole` | Admin-only role assignment |
+| any proxied method | `/flightsService/*` | Authenticated request proxied to Flight Service at `FLIGHT_SERVICE` |
+| any proxied method | `/bookingService/*` | Authenticated request proxied to Booking Service at `BOOKING_SERVICE` |
 
- - `controllers` -> they are the kind of last middlewares as post them you call your business layer to execute the business logic. In controllers we just recieve the incoming requests and data and then pass it to the business layer, and once business layer returns an output, we structure the API response in controllers and send the output.
+Pass the JWT in the `x-access-token` header on protected requests. The proxy removes its service prefix before forwarding. A new local database can be seeded with roles and sample users; for a known demo login, register a customer through signup.
 
- - `repositories` -> this folder contains all the logic using which we interact with the DB by writing queries, all the raw queries or ORM queries will go here.
+## Environment variables
 
- - `services` -> contains the business logic and interacts with repositories for data from the DB.
-
- - `utils` -> contains helper methods, error classes, etc.
-
- ### Setup the project
-
- - Clone this template from github and open in a text editor.
- - Run the following command:
-    ```
-        npm install
-    ```
- - In the root directory create a `.env` file and the following env variables:
-    ```
-        PORT=<port number>
-    ```
-    example:
-    ```
-        PORT=3000
-    ```
- - Go inside `src` folder and execute the following command:
-    ```
-        npx sequelize init
-    ```
-    - By executing the above command you will get the migrations and seeders folders along with confi.json file inside the config folder.<br>
-    Make sure to replace put the correct values for the username, password, databse, host and dialect for each environment: development, test and production.
-
- - To run the server, run the following command:
-    ```
-        npm run dev
-    ```
+See [.env.example](.env.example). Configure `PORT` (default demo port 3002), `SALT_ROUNDS`, a private `JWT_SECRET`, `JWT_EXPIRY`, local Flight and Booking base URLs, and the Gateway database credentials/name/host/dialect. Keep `DB_NAME=api_gateway_db` when following the root guide. Tested dependencies and the four-service workflow are documented at the repository root.

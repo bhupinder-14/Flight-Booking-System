@@ -1,0 +1,31 @@
+# Dependencies
+**/node_modules/
+
+# Local environment files and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/secrets/
+**/*credentials*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Logs and generated temporary files
+*.log
+logs/
+**/logs/
+*.tmp
+*.temp
+tmp/
+temp/
+**/tmp/
+**/temp/
+
+# Windows/macOS metadata
+Thumbs.db
+.DS_Store

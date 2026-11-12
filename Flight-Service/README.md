@@ -1,49 +1,37 @@
-# Basic Node Express Template
+# Flight Service
 
-This is a base node js project template, which anyone can use as it has been prepared, by keeping some of the most important code principles and project management recommendations. Feel free to change anything.
+Flight Service listens on port 3000 and owns airport, city, airplane, flight, and seat availability data. The root [README](../README.md) covers the full monorepo setup and demo workflow.
 
+## Local setup
 
-`src` -> Inside the src folder all the actual source code regarding the project will reside, this well not include any kind of tests. (You might make separate tests folder)
+Create `Flight-Service/.env` from [.env.example](.env.example), configure MySQL credentials and `flight_service_db`, and from the repository root run:
 
-Lets take a look inside the `src` folder
+```powershell
+Set-Location .\Flight-Service
+npm ci
+npx sequelize-cli db:migrate --config src/config/config.js --migrations-path src/migrations --env development
+npx sequelize-cli db:seed:all --config src/config/config.js --seeders-path src/seeders --env development
+npm run dev
+```
 
- - `config` -> In this folder anything and everything regarding any configurations of the setup of a library or module will be done. For e.g.: setting up `dotenv` and `server-config.js`.
+The service loads its own `.env`. The existing migration and seeder directories are under `src`; do not run Sequelize initialization commands. Seeded flight departure times are generated relative to the time the flight seeder runs.
 
- - `routes` -> In the routes folder, we register a route and the corresponding middleware and controllers to it.
+## Routes
 
- - `middlewares` -> they are just going to intercept the incoming reqquests where we can write our validators, authenticators, etc.
+Routes are mounted directly by the service and are also reached through the Gateway's `/flightsService/` proxy prefix.
 
- - `controllers` -> they are the kind of last middlewares as post them you call your business layer to execute the business logic. In controllers we just recieve the incoming requests and data and then pass it to the business layer, and once business layer returns an output, we structure the API response in controllers and send the output.
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET | `/api/v1/info` | Service info |
+| GET/POST | `/api/v1/airplanes` | List/create airplanes |
+| GET/POST | `/api/v1/cities` | List/create cities |
+| GET/POST | `/api/v1/airports` | List/create airports |
+| GET/POST | `/api/v1/flights` | Search/list or create flights |
+| GET | `/api/v1/flights/:id` | Fetch a flight |
+| GET | `/api/v1/flights/:id/seats` | Fetch seat availability |
 
- - `repositories` -> this folder contains all the logic using which we interact with the DB by writing queries, all the raw queries or ORM queries will go here.
+Flight search accepts `trips=FROM-TO`, `travellers`, `price`, `tripDate`, and `sort`. For example, `trips=MUM-DEL&travellers=1` searches one seat between Mumbai and Delhi. Sorting uses comma-separated field/direction entries such as `price_DESC,departureTime_ASC`.
 
- - `services` -> contains the business logic and interacts with repositories for data from the DB.
+## Environment variables
 
- - `utils` -> contains helper methods, error classes, etc.
-
- ### Setup the project
-
- - Clone this template from github and open in a text editor.
- - Run the following command:
-    ```
-        npm install
-    ```
- - In the root directory create a `.env` file and the following env variables:
-    ```
-        PORT=<port number>
-    ```
-    example:
-    ```
-        PORT=3000
-    ```
- - Go inside `src` folder and execute the following command:
-    ```
-        npx sequelize init
-    ```
-    - By executing the above command you will get the migrations and seeders folders along with confi.json file inside the config folder.<br>
-    Make sure to replace put the correct values for the username, password, databse, host and dialect for each environment: development, test and production.
-
- - To run the server, run the following command:
-    ```
-        npm run dev
-    ```
+Set `PORT` (demo default 3000), `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_HOST`, and `DB_DIALECT` in the service `.env`. Use `127.0.0.1` for a native Windows MySQL server and `flight_service_db` for the database in the root guide. No RabbitMQ or email configuration is used by this service.

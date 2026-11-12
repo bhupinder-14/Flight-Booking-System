@@ -1,49 +1,33 @@
-# Basic Node Express Template
+# Notification Service
 
-This is a base node js project template, which anyone can use as it has been prepared, by keeping some of the most important code principles and project management recommendations. Feel free to change anything.
+Notification Service listens on port 3003. It consumes booking notifications from RabbitMQ queue `noti-queue`, records them in local logs when SMTP settings are absent, and can send the existing confirmation email when Gmail SMTP credentials are configured. It also exposes a ticket-record API. The [root README](../README.md) documents the complete Windows setup.
 
+## Local setup
 
-`src` -> Inside the src folder all the actual source code regarding the project will reside, this well not include any kind of tests. (You might make separate tests folder)
+Create `Flights-Notification-Service/.env` from [.env.example](.env.example), configure MySQL credentials and `notification_service_db`, then from the repository root run:
 
-Lets take a look inside the `src` folder
+```powershell
+Set-Location .\Flights-Notification-Service
+npm ci
+npx sequelize-cli db:migrate --config src/config/config.js --migrations-path src/migrations --env development
+npm run dev
+```
 
- - `config` -> In this folder anything and everything regarding any configurations of the setup of a library or module will be done. For e.g.: setting up `dotenv` and `server-config.js`.
+There are no notification seeders. The service loads its own `.env`. RabbitMQ must be reachable at the URL currently configured in the service; the AMQP connection requests `frameMax=8192` for RabbitMQ 4.4 compatibility.
 
- - `routes` -> In the routes folder, we register a route and the corresponding middleware and controllers to it.
+## Notification behavior
 
- - `middlewares` -> they are just going to intercept the incoming reqquests where we can write our validators, authenticators, etc.
+- Leave `GMAIL_EMAIL` and `GMAIL_PASS` blank for local demos. The consumer logs selected booking/flight notification details, explicitly says email was skipped, and acknowledges after that local logging succeeds. This is not successful email delivery.
+- If both are configured, the existing email template is sent using Nodemailer. A message is acknowledged only after successful delivery. Transient SMTP failures have bounded retries; exhausted or permanent failures are routed to the dead-letter queue instead of being silently acknowledged. Retry messages use `noti-queue.retry`; dead letters use `noti-queue.dead`.
+- RabbitMQ uses the AMQP port 5672; no management plugin is needed. Booking Service publishes to the same `noti-queue` queue.
 
- - `controllers` -> they are the kind of last middlewares as post them you call your business layer to execute the business logic. In controllers we just recieve the incoming requests and data and then pass it to the business layer, and once business layer returns an output, we structure the API response in controllers and send the output.
+For real delivery, configure a Gmail address and an app password where Google account settings support one. Never commit credentials. Keep all other notification configuration in [.env.example](.env.example) and configure `PORT`, database name/account/host/dialect locally.
 
- - `repositories` -> this folder contains all the logic using which we interact with the DB by writing queries, all the raw queries or ORM queries will go here.
+## Routes
 
- - `services` -> contains the business logic and interacts with repositories for data from the DB.
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET | `/api/v1/info` | Service info |
+| POST | `/api/v1/tickets` | Create a ticket record in this service's database |
 
- - `utils` -> contains helper methods, error classes, etc.
-
- ### Setup the project
-
- - Clone this template from github and open in a text editor.
- - Run the following command:
-    ```
-    npm install
-    ```
- - In the root directory create a `.env` file and the following env variables:
-    ```
-    PORT=<port number>
-    ```
-    example:
-    ```
-    PORT=3000
-    ```
- - Go inside `src` folder and execute the following command:
-    ```
-    npx sequelize init --force
-    ```
-    - By executing the above command you will get the migrations and seeders folders along with confi.json file inside the config folder.<br>
-    Make sure to replace put the correct values for the username, password, databse, host and dialect for each environment: development, test and production.
-
- - To run the server, run the following command:
-    ```
-    npm run dev
-    ```
+Queue consumption is a background process independent of the ticket API route. Notification Service owns `notification_service_db`; its schema is created by the migration above.

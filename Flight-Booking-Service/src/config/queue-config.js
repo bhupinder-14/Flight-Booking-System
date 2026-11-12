@@ -4,7 +4,7 @@ let channel, connection;
 
 async function connectQueue() {
   try {
-    connection = await amqplib.connect("amqp://localhost");
+    connection = await amqplib.connect("amqp://localhost?frameMax=8192");
     // connection = await amqplib.connect("amqp://rabbitmq");
     channel = await connection.createChannel();
 

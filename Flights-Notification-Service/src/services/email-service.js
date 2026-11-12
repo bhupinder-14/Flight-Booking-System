@@ -1,10 +1,16 @@
 const { TicketRepository } = require("../repositories");
-const { MAILER } = require("../config");
+const { MAILER, SMTP_CONFIGURED } = require("../config");
 
 const ticketRepo = new TicketRepository();
 
 async function sendEmail(mailFrom, data) {
   try {
+    if (!SMTP_CONFIGURED || !MAILER) {
+      const error = new Error("SMTP credentials are not configured");
+      error.code = "ESMTP_NOT_CONFIGURED";
+      throw error;
+    }
+
     const { recepientEmail, subject, text, flightData, bookingDetails } = data;
 
     // Create a well-formatted HTML email content
@@ -84,7 +90,6 @@ Have a safe and pleasant journey!
     });
     return response;
   } catch (error) {
-    console.log(error);
     throw error;
   }
 }

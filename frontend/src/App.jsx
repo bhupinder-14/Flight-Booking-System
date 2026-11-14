@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownUp, ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, Check,
-  CheckCircle2, ChevronDown, CircleHelp, Clock3, Compass, CreditCard,
+  CheckCircle2, ChevronDown, CircleHelp, Compass, CreditCard,
   Globe2, LockKeyhole, Menu, Plane,
   ShieldCheck, Sparkles, Ticket, UserRound, Users, X
 } from "lucide-react";
@@ -634,7 +634,8 @@ function InfoIcon() {
 function userIdFromToken(jwt) {
   try {
     const encoded = jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(atob(encoded));
+    const padded = encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "=");
+    const payload = JSON.parse(atob(padded));
     return payload.id ? String(payload.id) : "";
   } catch {
     return "";

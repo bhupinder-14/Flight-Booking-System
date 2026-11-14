@@ -465,7 +465,6 @@ function App() {
               <div className="benefit-item"><span className="benefit-number">03</span><Sparkles size={22} /><h3>Details, considered</h3><p>A calmer booking experience, designed to keep the journey in focus.</p></div>
             </section>}
           </main>
-          <Footer />
         </>
       )}
 

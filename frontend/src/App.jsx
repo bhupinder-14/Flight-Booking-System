@@ -66,7 +66,7 @@ function App() {
 
   const [fromCode, setFromCode] = useState("");
   const [toCode, setToCode] = useState("");
-  const [departDate, setDepartDate] = useState(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10));
+  const [departDate, setDepartDate] = useState("");
   const [travellers, setTravellers] = useState(1);
   const [searchBusy, setSearchBusy] = useState(false);
   const [searchError, setSearchError] = useState("");
@@ -91,6 +91,7 @@ function App() {
   const [confirmation, setConfirmation] = useState(null);
 
   const today = new Date().toISOString().slice(0, 10);
+  const maxFlightPrice = Math.max(30000, ...flights.map((flight) => Number(flight.price) || 0));
   const sortedFlights = useMemo(() => {
     const filtered = flights.filter((flight) => Number(flight.price || 0) <= priceCeiling);
     return filtered.sort((a, b) => {
@@ -197,12 +198,13 @@ function App() {
       const params = new URLSearchParams({
         trips: `${fromCode}-${toCode}`,
         travellers: String(travellers),
-        tripDate: departDate,
         sort,
       });
+      if (departDate) params.set("tripDate", departDate);
       const result = await api(`/flightsService/api/v1/flights?${params.toString()}`, { token });
-      setFlights(Array.isArray(result) ? result : []);
-      setPriceCeiling(30000);
+      const foundFlights = Array.isArray(result) ? result : [];
+      setFlights(foundFlights);
+      setPriceCeiling(Math.max(30000, ...foundFlights.map((flight) => Number(flight.price) || 0)));
       setPage("home");
       setTimeout(() => document.getElementById("flight-results")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
     } catch (error) {
@@ -397,9 +399,9 @@ function App() {
                       </span>
                     </label>
                     <label className="field-block date-field">
-                      <span className="field-label">DEPARTURE</span>
+                      <span className="field-label">DEPARTURE DATE · OPTIONAL</span>
                       <span className="field-value"><CalendarDays size={18} className="field-icon" />
-                        <input type="date" min={today} value={departDate} onChange={(e) => setDepartDate(e.target.value)} required />
+                        <input type="date" min={today} value={departDate} onChange={(e) => setDepartDate(e.target.value)} />
                       </span>
                     </label>
                     <label className="field-block traveller-field">
@@ -413,7 +415,7 @@ function App() {
                   </div>
                   {searchError && <div className="inline-alert">{searchError}</div>}
                   <div className="search-submit-row">
-                    <span className="search-assurance"><ShieldCheck size={15} /> Secure booking · No hidden fees</span>
+                    <span className="search-assurance"><ShieldCheck size={15} /> Protected API · Clear pricing</span>
                     <button className="primary-button search-button" type="submit" disabled={searchBusy}>
                       {searchBusy ? "Searching…" : "Find flights"} <ArrowRight size={17} />
                     </button>
@@ -426,7 +428,7 @@ function App() {
               <section className="results-section content-shell" id="flight-results">
                 <div className="results-top">
                   <div><span className="section-kicker">THE POSSIBILITIES</span><h2>Your flights, thoughtfully found.</h2>
-                    <p>{selectedFrom?.City?.name || selectedFrom?.name || fromCode} to {selectedTo?.City?.name || selectedTo?.name || toCode} · {dateLabel(departDate)}</p>
+                    <p>{selectedFrom?.City?.name || selectedFrom?.name || fromCode} to {selectedTo?.City?.name || selectedTo?.name || toCode} · {departDate ? dateLabel(departDate) : "All dates"}</p>
                   </div>
                   <div className="result-controls">
                     <label className="sort-control">Sort by
@@ -444,8 +446,8 @@ function App() {
                       <aside className="filter-card">
                         <div className="filter-title">Refine your search <span>01</span></div>
                         <label className="range-label">Maximum price <strong>{currency(priceCeiling)}</strong></label>
-                        <input className="price-range" type="range" min="1000" max="30000" step="500" value={priceCeiling} onChange={(e) => setPriceCeiling(Number(e.target.value))} />
-                        <div className="range-ends"><span>₹1,000</span><span>₹30,000+</span></div>
+                        <input className="price-range" type="range" min="1000" max={maxFlightPrice} step="500" value={priceCeiling} onChange={(e) => setPriceCeiling(Number(e.target.value))} />
+                        <div className="range-ends"><span>₹1,000</span><span>{currency(maxFlightPrice)}</span></div>
                         <div className="filter-divider" />
                         <div className="filter-note"><Sparkles size={15} /> Prices shown are returned by your local flight inventory.</div>
                       </aside>
@@ -576,16 +578,17 @@ function MapPinIcon() {
 function FlightCard({ flight, onChoose }) {
   const from = getAirportCode(flight, "from");
   const to = getAirportCode(flight, "to");
+  const departed = new Date(flight.departureTime).getTime() < Date.now();
   return (
     <article className="flight-card">
-      <div className="flight-card-top"><div className="airline-mark"><Plane size={17} /></div><div className="flight-identity"><strong>{flight.airplaneDetail?.modelNumber || "Scheduled flight"}</strong><span>{flight.flightNumber} · Flight inventory</span></div><span className="live-inventory"><span /> Available inventory</span></div>
+      <div className="flight-card-top"><div className="airline-mark"><Plane size={17} /></div><div className="flight-identity"><strong>{flight.airplaneDetail?.modelNumber || "Scheduled flight"}</strong><span>{flight.flightNumber} · Flight inventory</span></div><span className={departed ? "past-inventory" : "live-inventory"}><span /> {departed ? "Departure passed" : "Seats in inventory"}</span></div>
       <div className="flight-card-middle">
         <div className="flight-point"><strong>{timeLabel(flight.departureTime)}</strong><span>{from}</span><small>{getAirportName(flight, "from")}</small></div>
         <div className="flight-duration"><span>Journey</span><div><i /><Plane size={15} /><i /></div><small>{dateLabel(flight.departureTime, { day: "numeric", month: "short", year: "numeric" })}</small></div>
         <div className="flight-point destination"><strong>{timeLabel(flight.arrivalTime)}</strong><span>{to}</span><small>{getAirportName(flight, "to")}</small></div>
         <div className="flight-fare"><span>FARE / PERSON</span><strong>{currency(flight.price)}</strong><small>{flight.totalSeats} seats shown</small></div>
       </div>
-      <div className="flight-card-bottom"><span><ShieldCheck size={14} /> Fare and seat count from live local API</span><button className="choose-button" onClick={onChoose}>Select flight <ArrowRight size={15} /></button></div>
+      <div className="flight-card-bottom"><span><ShieldCheck size={14} /> Fare and seat count from live local API</span><button className="choose-button" onClick={onChoose} disabled={departed} title={departed ? "This flight's scheduled departure has passed" : "Select this flight"}>{departed ? "Not bookable" : "Select flight"} <ArrowRight size={15} /></button></div>
     </article>
   );
 }

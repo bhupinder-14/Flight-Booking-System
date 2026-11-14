@@ -23,7 +23,7 @@ To use a different Gateway URL, set `VITE_API_BASE_URL` in a local `.env` file. 
 
 - Customer signup and signin through `POST /api/v1/user/signup` and `POST /api/v1/user/signin`.
 - Authenticated airport list from `GET /flightsService/api/v1/airports`.
-- One-way flight search from `GET /flightsService/api/v1/flights?trips=FROM-TO&travellers=N&tripDate=YYYY-MM-DD&sort=price_ASC`.
+- One-way flight search from `GET /flightsService/api/v1/flights?trips=FROM-TO&travellers=N&sort=price_ASC`, with optional `tripDate=YYYY-MM-DD` when the traveller selects a date.
 - Traveller-name collection in the checkout UI.
 - Booking creation through `POST /bookingService/api/v1/bookings` with the backend's existing request shape: `flightId`, `userId`, and `noofSeats`.
 - Clearly labelled simulated payment through `POST /bookingService/api/v1/bookings/payments` with `x-idempotency-key`.
@@ -37,7 +37,7 @@ The frontend intentionally does not invent APIs:
 - The current Booking Service exposes booking creation and payment, but no customer booking-history endpoint. “My trips” therefore shows only completed demo bookings stored in this browser's local storage. It is not server-synchronised and clearing browser data removes this local list.
 - The checkout collects passenger names for the current session, but the current Booking API does not accept or persist passenger records. The UI discloses this before reservation.
 - Payment is a simulated backend state change. No card data is collected and no real payment provider is integrated.
-- Search is one-way because the Flight Service search contract currently accepts a single `tripDate` and `trips=FROM-TO` pair.
+- Search is one-way because the Flight Service search contract currently accepts a single `tripDate` and `trips=FROM-TO` pair. The seeded demo flights are dated relative to the time the seeder is run; the date filter is optional so existing inventory can be inspected, but flights whose scheduled departure has passed are shown as unavailable for booking.
 
 These limitations are displayed in the relevant screens rather than represented as completed backend capabilities.
 

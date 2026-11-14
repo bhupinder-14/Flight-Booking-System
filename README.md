@@ -4,7 +4,7 @@ A Windows-friendly local demo of a four-service flight booking system, now with 
 
 The code was run on Windows 11 with Node.js 26.13.0, npm 11.20.0, MySQL 8.4.9, RabbitMQ 4.4.0, and Erlang/OTP 29.1.2. These are the tested versions, not enforced package engine requirements. A different laptop has not yet been verified. RabbitMQ 4.4.0 supports Erlang/OTP 29 according to the [RabbitMQ compatibility matrix](https://www.rabbitmq.com/docs/which-erlang).
 
-This is a backend API with no browser frontend. It is intended for local development and recruiter demonstrations; it is not described as production-ready.
+The backend and browser frontend are intended for local development and recruiter demonstrations; this project is not described as production-ready.
 
 
 ## Run the browser frontend
@@ -23,7 +23,7 @@ Open the Vite URL (normally `http://localhost:5173`). Its development proxy forw
 
 ```mermaid
 flowchart LR
-    Client[PowerShell or Postman] --> Gateway[API Gateway :3002]
+    Client[Browser frontend, PowerShell, or Postman] --> Gateway[API Gateway :3002]
     Gateway -->|/flightsService/*| Flight[Flight Service :3000]
     Gateway -->|/bookingService/*| Booking[Booking Service :3001]
     Booking -->|HTTP flight lookup and seat update| Flight
@@ -48,7 +48,8 @@ Each service owns its schema and Sequelize migration history. Keep these four da
 
 ## Technology
 
-- Node.js and Express in all four services; each `npm run dev` runs `node --watch src/index.js`.
+- React + Vite + Tailwind CSS for the browser frontend in `frontend/`.
+- Node.js and Express in all four backend services; each `npm run dev` runs `node --watch src/index.js`.
 - Sequelize 6, Sequelize CLI 6, and `mysql2` for the service databases.
 - API Gateway: `bcrypt`, `jsonwebtoken`, `express-rate-limit`, and `http-proxy-middleware`.
 - Booking Service: `axios`, `amqplib`, and `node-cron`.
@@ -362,7 +363,7 @@ The Notification Service also exposes `POST /api/v1/tickets` for its separate ti
 
 ## Limitations
 
-- The repository contains backend APIs only; it has no frontend.
+- The frontend is a local demo UI. Passenger names are collected in the browser but are not persisted by the current Booking API; My Trips uses browser-local demo history because there is no server-side booking-history endpoint.
 - Payment success is simulated in Booking Service; no real payment gateway is integrated.
 - Gmail delivery is optional. Blank credentials mean the notification is logged locally and acknowledged, not emailed.
 - Services use separate databases and migration histories; do not point them all at one database.

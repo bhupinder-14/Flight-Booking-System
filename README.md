@@ -12,7 +12,7 @@ The backend and browser frontend are intended for local development and recruite
 The premium React + Vite frontend lives in [frontend/](./frontend). Start MySQL, RabbitMQ, and the four backend services using the setup instructions below, then open a separate PowerShell window at the repository root:
 
 ```powershell
-Set-Location .\\frontend
+Set-Location .\frontend
 npm install
 npm run dev
 ```

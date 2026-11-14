@@ -155,7 +155,7 @@ function App() {
         method: "POST", body: { email: nextEmail, password },
       });
       if (typeof jwt !== "string") throw new Error("The sign-in response did not contain a JWT token.");
-      const id = createdUser?.id || userId;
+      const id = createdUser?.id || userIdFromToken(jwt) || userId;
       setToken(jwt);
       setEmail(nextEmail);
       if (id) setUserId(String(id));
@@ -626,6 +626,16 @@ function Footer() {
 
 function InfoIcon() {
   return <CircleHelp size={17} />;
+}
+
+function userIdFromToken(jwt) {
+  try {
+    const encoded = jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(encoded));
+    return payload.id ? String(payload.id) : "";
+  } catch {
+    return "";
+  }
 }
 
 function makeIdempotencyKey() {

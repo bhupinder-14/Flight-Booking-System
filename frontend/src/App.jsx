@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownUp, ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, Check,
   CheckCircle2, ChevronDown, CircleHelp, Clock3, Compass, CreditCard,
-  Globe2, Luggage, LockKeyhole, LogIn, Menu, Minus, Plane, Plus, Search,
+  Globe2, LockKeyhole, Menu, Plane,
   ShieldCheck, Sparkles, Ticket, UserRound, Users, X
 } from "lucide-react";
 
@@ -163,6 +163,7 @@ function App() {
       localStorage.setItem(STORAGE.email, nextEmail);
       if (id) localStorage.setItem(STORAGE.userId, String(id));
       setAuthOpen(false);
+      setSearchError("");
       await loadAirports(jwt);
       setAuthError("");
     } catch (error) {
